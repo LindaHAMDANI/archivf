@@ -1,0 +1,75 @@
+checks for yellow_taxis_data:
+  # Vérification du schéma pour s'assurer que toutes les colonnes nécessaires sont présentes.
+  - schema:
+      warn:
+        # Liste des colonnes obligatoires pour le dataset yellow_taxis_data.
+        # Un avertissement sera généré si l'une de ces colonnes est manquante.
+        when required column missing: 
+          - Airport_fee
+          - tpep_pickup_datetime
+          - tpep_dropoff_datetime
+          - passenger_count
+          - trip_distance
+          - RatecodeID
+          - VendorID
+          - PULocationID
+          - DOLocationID
+          - payment_type
+          - fare_amount
+          - extra
+          - mta_tax
+          - tip_amount
+          - tolls_amount
+          - improvement_surcharge
+          - total_amount
+          - congestion_surcharge
+          - store_and_fwd_flag
+
+  # Vérification du nombre de lignes dans le dataset.
+
+  - row_count:
+      # Avertissement si le dataset contient moins de 100 lignes.
+      warn: when < 100 
+      # Échec si le dataset est vide (0 lignes).
+      fail: when = 0
+
+  # Vérification des valeurs minimales dans les colonnes importantes.
+  # Cette règle vérifie si les tarifs minimums (`fare_amount`) et les distances (`trip_distance`) respectent des seuils logiques.
+  - min(fare_amount) > 0   # Échec si la valeur minimum de fare_amount n'est pas supérieure à 0.
+  - min(trip_distance) >= 0  # Échec si une distance minimum est négative.
+
+  # Vérification de l'absence de valeurs manquantes pour la colonne `tpep_pickup_datetime`.
+  - missing_count(tpep_pickup_datetime) = 0
+  # Vérification de l'absence de valeurs manquantes pour la colonne `tpep_dropoff_datetime`.
+  - missing_count(tpep_dropoff_datetime) = 0
+
+  # Vérification des plages pour passenger_count.
+  - min(passenger_count) >= 1  # Échec si le nombre de passagers est < 1.
+  - max(passenger_count) <= 8  # Échec si le nombre de passagers dépasse 8 (valeur standard pour les taxis).
+
+  # Vérification des IDs de localisation.
+  - min("PULocationID") >= 1  # Échec si une ID de localisation de prise en charge est < 1.
+  - min("DOLocationID") >= 1  # Échec si une ID de localisation de dépose est < 1.
+  - missing_count("PULocationID") = 0  # Échec s'il manque des IDs de localisation de prise en charge.
+  - missing_count("DOLocationID") = 0  # Échec s'il manque des IDs de localisation de dépose.
+
+  # Vérification de la cohérence des montants totaux.
+  - min(total_amount) >= 0  # Échec si un montant total est négatif.
+  - min(tip_amount) >= 0  # Échec si un pourboire est négatif.
+  - min(tolls_amount) >= 0  # Échec si un montant de péage est négatif.
+
+  # Vérification des valeurs de RatecodeID
+  - min("RatecodeID") >= 1  # Échec si une valeur est inférieure à 1.
+  - max("RatecodeID") <= 6  # Échec si une valeur dépasse 6 (plage standard pour les codes de tarification).
+  - missing_count("RatecodeID") = 0  # Échec s'il y a des valeurs manquantes.
+  
+  # Vérification des valeurs de VendorID
+  - min("VendorID") >= 1  # Échec si une valeur est inférieure à 1.
+  - max("VendorID") <= 2  # Échec si une valeur dépasse 2 (NYC a seulement deux fournisseurs).
+  - missing_count("VendorID") = 0  # Échec s'il y a des valeurs manquantes.
+
+  # Vérification des types de paiement
+  - min("payment_type") >= 1
+  - max("payment_type") <= 6
+
+
